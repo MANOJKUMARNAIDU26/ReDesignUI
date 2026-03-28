@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative Inbox UI - Neon Glass</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            /* Creative Color Palette */
+            --bg-gradient: linear-gradient(145deg, #130a2a 0%, #090414 100%);
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: #a8b2d1; /* Soft cool lavender/grey */
+            --accent-neon: #00f3ff; /* Electric Cyan */
+            --neon-glow: 0 0 12px rgba(0, 243, 255, 0.6);
+            --delete-gradient: radial-gradient(circle at bottom, rgba(255, 0, 106, 0.85) 0%, rgba(138, 35, 135, 0.7) 100%);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #0f0f13; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+        /* Phone Container */
+        .phone-frame {
+            width: 375px; height: 700px; 
+            background: var(--bg-gradient);
+            border-radius: 44px; border: 8px solid #222; overflow: hidden;
+            position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(138, 35, 135, 0.2);
+        }
+
+        .header { padding: 45px 24px 15px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { 
+            font-size: 34px; font-weight: 800; 
+            background: linear-gradient(90deg, #fff, #a8b2d1);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        
+        .trash-btn { 
+            background: rgba(255, 255, 255, 0.05); 
+            border: 1px solid var(--card-border); 
+            color: #ff4d6d; 
+            cursor: pointer; 
+            padding: 10px; 
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+        .trash-btn:hover { background: rgba(255, 77, 109, 0.2); box-shadow: 0 0 15px rgba(255, 77, 109, 0.4); }
+
+        /* Floating Glass Cards */
+        .email-list { padding: 10px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+        .email-item {
+            padding: 18px; display: flex; justify-content: space-between;
+            align-items: flex-start; 
+            background: var(--card-bg);
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        
+        /* Active State Card */
+        .email-item.selected {
+            background: rgba(0, 243, 255, 0.05);
+            border-color: rgba(0, 243, 255, 0.3);
+            box-shadow: inset 0 0 20px rgba(0, 243, 255, 0.05);
+            transform: scale(0.98);
+        }
+
+        .content-area { flex: 1; padding-right: 15px; }
+        .email-title { color: var(--text-primary); font-size: 16px; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; }
+        .email-snippet { color: var(--text-secondary); font-size: 13px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* Neon Checkbox */
+        .custom-checkbox {
+            width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.2); border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.3s;
+            margin-top: 2px;
+        }
+        .selected .custom-checkbox { 
+            background-color: var(--accent-neon); 
+            border-color: var(--accent-neon); 
+            box-shadow: var(--neon-glow);
+        }
+        .check-mark { width: 14px; height: 14px; fill: #000; display: none; font-weight: bold; }
+        .selected .check-mark { display: block; }
+
+        /* --- CREATIVE DROP ANIMATION MODAL --- */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--delete-gradient); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; padding: 40px; text-align: center;
+            
+            transform-origin: bottom center;
+            animation: dropExpand 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1) forwards;
+        }
+
+        @keyframes dropExpand { 
+            0% { transform: scale(0); opacity: 0; border-radius: 100%; } 
+            100% { transform: scale(1); opacity: 1; border-radius: 0; } 
+        }
+
+        .modal-content-wrapper {
+            animation: fadeInText 0.4s ease-out 0.2s both;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        @keyframes fadeInText {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal-title { font-size: 28px; font-weight: 800; color: white; margin-bottom: 12px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .modal-text { font-size: 16px; color: rgba(255, 255, 255, 0.9); margin-bottom: 35px; line-height: 1.5; }
+        
+        .delete-confirm-btn {
+            background-color: white; color: #ff0055; border: none;
+            padding: 16px 45px; border-radius: 999px; font-size: 17px;
+            font-weight: 700; cursor: pointer; margin-bottom: 16px; width: 160px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .delete-confirm-btn:active { transform: scale(0.95); }
+
+        .cancel-btn { 
+            background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); 
+            color: white; font-size: 16px; font-weight: 500; cursor: pointer; 
+            padding: 12px 30px; border-radius: 999px; width: 160px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const App = () => {
+            const [emails, setEmails] = useState([
+                { id: 1, title: 'Weekly team update', snippet: 'Hi team, Just a quick update on our progress this week. We\'ve made significant strides in th...' },
+                { id: 2, title: 'Your subscription confirmation', snippet: 'Thank you for subscribing to our newsletter! You\'ll now receive updates about our latest...' },
+                { id: 3, title: 'Invoice #1234 for April', snippet: 'Your monthly invoice is now available. Please find attached the detailed breakdown of your...' },
+                { id: 4, title: 'Security alert: New login', snippet: 'We detected a new sign-in to your account from a new device or location. If this was you,...' },
+                { id: 5, title: 'Upcoming maintenance notice', snippet: 'Please be advised that our platform will undergo scheduled maintenance this weeken...' }
+            ]);
+
+            const [selectedIds, setSelectedIds] = useState([]);
+            const [isModalOpen, setIsModalOpen] = useState(false);
+
+            const toggleSelect = (id) => {
+                if (selectedIds.includes(id)) {
+                    setSelectedIds(selectedIds.filter(item => item !== id));
+                } else {
+                    setSelectedIds([...selectedIds, id]);
+                }
+            };
+
+            const handleDeleteClick = () => {
+                if (selectedIds.length > 0) {
+                    setIsModalOpen(true);
+                }
+            };
+
+            const confirmDelete = () => {
+                setEmails(emails.filter(email => !selectedIds.includes(email.id)));
+                setSelectedIds([]);
+                setIsModalOpen(false);
+            };
+
+            return (
+                <div className="phone-frame">
+                    <div className="header">
+                        <h1>Inbox</h1>
+                        <button className="trash-btn" onClick={handleDeleteClick}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div className="email-list">
+                        {emails.map((email) => (
+                            <div 
+                                key={email.id} 
+                                className={`email-item ${selectedIds.includes(email.id) ? 'selected' : ''}`}
+                                onClick={() => toggleSelect(email.id)}
+                            >
+                                <div className="content-area">
+                                    <div className="email-title">{email.title}</div>
+                                    <div className="email-snippet">{email.snippet}</div>
+                                </div>
+                                <div className="custom-checkbox">
+                                    <svg className="check-mark" viewBox="0 0 24 24">
+                                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                    </svg>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isModalOpen && (
+                        <div className="modal-overlay">
+                            <div className="modal-content-wrapper">
+                                <h2 className="modal-title">{selectedIds.length} Data Fragments</h2>
+                                <p className="modal-text">
+                                    Are you sure you want to permanently purge these entries from the system?
+                                </p>
+                                
+                                <button className="delete-confirm-btn" onClick={confirmDelete}>
+                                    Delete
+                                </button>
+                                
+                                <button className="cancel-btn" onClick={() => setIsModalOpen(false)}>
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

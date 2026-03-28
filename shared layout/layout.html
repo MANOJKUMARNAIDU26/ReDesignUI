@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collectibles UI - Classic Dark</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,600&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            /* Classic Dark Palette */
+            --bg-main: #0a0a0c;
+            --bg-panel: #16161a;
+            --text-main: #f3f4f6;
+            --text-muted: #8b8b99;
+            --accent-gold: #d4af37; /* Metallic brushed gold */
+            --accent-gold-dim: rgba(212, 175, 55, 0.1);
+            --border-subtle: #26262e;
+            --diamond-color: #d4af37;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { 
+            background-color: var(--bg-main); 
+            background-image: radial-gradient(circle at top center, #1a1a20 0%, var(--bg-main) 100%);
+            color: var(--text-main);
+            display: flex; justify-content: center; padding: 40px 20px; 
+            min-height: 100vh;
+        }
+        
+        .container { width: 100%; max-width: 600px; }
+        
+        h1 { 
+            font-family: 'Playfair Display', serif; 
+            font-size: 28px; 
+            font-style: italic;
+            margin-bottom: 24px; 
+            color: var(--accent-gold);
+            letter-spacing: 0.5px;
+        }
+
+        .controls { 
+            display: flex; gap: 12px; margin-bottom: 30px; 
+            border-bottom: 1px solid var(--border-subtle); 
+            padding-bottom: 24px; 
+        }
+        
+        .toggle-btn { 
+            display: flex; align-items: center; gap: 6px; 
+            padding: 8px 18px; border-radius: 999px; 
+            border: 1px solid var(--border-subtle); 
+            background: var(--bg-panel); 
+            color: var(--text-muted); 
+            font-weight: 500; font-size: 14px;
+            cursor: pointer; 
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-btn:hover { border-color: #3f3f4e; color: #fff; }
+        
+        .toggle-btn.active { 
+            background: var(--accent-gold-dim); 
+            color: var(--accent-gold); 
+            border-color: var(--accent-gold); 
+            box-shadow: 0 0 15px rgba(212, 175, 55, 0.15);
+        }
+
+        .view-card { display: flex; gap: 24px; }
+        .view-list { display: flex; flex-direction: column; gap: 16px; }
+        
+        .item { flex: 1; cursor: pointer; transition: transform 0.2s ease; }
+        .item:hover { transform: translateY(-4px); }
+        
+        .img-container { 
+            width: 100%; aspect-ratio: 1/1; 
+            border-radius: 16px; overflow: hidden; margin-bottom: 14px; 
+            border: 1px solid var(--border-subtle);
+            background: var(--bg-panel);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        /* Subtle gold inner glow for images */
+        .img-container::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 16px; border: 1px solid rgba(212, 175, 55, 0.2);
+            pointer-events: none;
+        }
+        
+        .img-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: opacity 0.3s; }
+        .item:hover .img-container img { opacity: 1; }
+
+        .view-pack { display: flex; flex-direction: column; align-items: center; padding: 50px 0; }
+        .pack-stack { position: relative; width: 160px; height: 160px; margin-bottom: 40px; }
+        
+        .pack-layer { 
+            position: absolute; width: 100%; height: 100%; 
+            border-radius: 16px; overflow: hidden; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8); 
+            border: 1px solid var(--accent-gold); 
+            background: var(--bg-panel);
+        }
+        .pack-layer img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+
+        .item-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.3px; color: #fff; }
+        .item-footer { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+        .price { color: var(--accent-gold); }
+        .id { color: var(--text-muted); display: flex; align-items: center; gap: 6px; font-family: monospace; font-size: 13px; }
+        .diamond { color: var(--diamond-color); font-size: 10px; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        const collectiblesData = [
+            {
+                id: '209',
+                title: 'Skilled Fingers Series',
+                price: 0.855,
+                src: "a1.png" // Used placeholder images to test the style
+            },
+            {
+                id: '808',
+                title: 'Vibrant Vibes Series',
+                price: 0.209,
+                src: 'a2.png' 
+            }
+        ];
+
+        const App = () => {
+            const [view, setView] = useState('card');
+
+            const renderView = () => {
+                if (view === 'pack') {
+                    return (
+                        <div className="view-pack">
+                            <div className="pack-stack">
+                                {collectiblesData.map((item, i) => (
+                                    <div key={i} className="pack-layer" style={{
+                                        transform: `translate(${i * -12}px, ${i * 8}px) rotate(${i * -4}deg)`,
+                                        zIndex: collectiblesData.length - i
+                                    }}>
+                                        <img src={item.src} alt="pack" />
+                                    </div>
+                                ))}
+                            </div>
+                            <div style={{textAlign:'center'}}>
+                                <h2 style={{fontSize:'18px', fontWeight:'600', color:'#fff', marginBottom:'6px', fontFamily: "'Playfair Display', serif", fontStyle: 'italic'}}>{collectiblesData.length} Masterpieces</h2>
+                                <p style={{color:'var(--accent-gold)', fontWeight:'600', fontSize:'15px'}}>1.064 ETH</p>
+                            </div>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div className={`view-${view}`}>
+                        {collectiblesData.map((item, i) => (
+                            <div key={i} className="item" style={view === 'list' ? {display:'flex', gap:'20px', alignItems:'center', padding:'12px', background:'var(--bg-panel)', borderRadius:'16px', border:'1px solid var(--border-subtle)'} : {}}>
+                                <div className="img-container" style={view === 'list' ? {width:'80px', height:'80px', marginBottom:0} : {}}>
+                                    <img src={item.src} alt={item.title} />
+                                </div>
+                                <div style={{flex:1}}>
+                                    <div className="item-title">{item.title}</div>
+                                    <div className="item-footer">
+                                        <span className="price">{item.price} ETH</span>
+                                        <span className="id"><span className="diamond">♦</span> #{item.id}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            };
+
+            return (
+                <div className="container">
+                    <h1>Private Collection</h1>
+                    <div className="controls">
+                        <button className={`toggle-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
+                        <button className={`toggle-btn ${view === 'card' ? 'active' : ''}`} onClick={() => setView('card')}>Card</button>
+                        <button className={`toggle-btn ${view === 'pack' ? 'active' : ''}`} onClick={() => setView('pack')}>Pack</button>
+                    </div>
+                    {renderView()}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
